@@ -1,0 +1,25 @@
+{
+  "name": "todo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon dev/index.js",
+    "build": "node build/main.js",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "vue": "^3.5.27"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "esbuild": "^0.27.2",
+    "esbuild-plugin-vue3": "^0.5.1",
+    "nodemon": "^3.1.11"
+  }
+}
