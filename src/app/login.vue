@@ -11,6 +11,14 @@
         },
 
         methods:{
+
+            formWrapperClicked(e){
+
+                if(e.target == e.currentTarget){
+
+                    this.$emit('setActiveForm', 'none')
+                }
+            },
     
             async loginSubmit(e){
     
@@ -31,7 +39,7 @@
 
                     body: JSON.stringify(Object.fromEntries(formData.entries()))
 
-                }).then(d => d.json())
+                }).then(res => res.json())
 
                 this.$emit("setSpinner", false)
 
@@ -41,11 +49,11 @@
                 }
                 else{
 
-                    this.$emit("setActiveForm", "none")
-
                     this.$emit("setUser", data.user)
 
                     this.$emit("setItemList", data.itemList)
+
+                    this.$emit("setActiveForm", "none")
                 }
             }
         }
@@ -54,12 +62,12 @@
 </script>
 
 <template>
-    <div  v-if="activeForm == 'login'" class="form-wrapper" @click="$emit('setActiveForm', 'none')">
+    <div  v-if="activeForm == 'login'" class="form-wrapper" @click="formWrapperClicked">
         <form class="form" @submit="loginSubmit">
             <button @click="$emit('setActiveForm', 'none')"><i class="fa-solid fa-x"></i></button>
             <span>Login</span>
-            <input type="text" placeholder="Email" />
-            <input type="password" placeholder="Password" />
+            <input type="text" placeholder="Email" name="email"/>
+            <input type="password" placeholder="Password" name="password" />
             <button>Submit</button>
             <span>Don't have an account yet, <button @click="$emit('setActiveForm', 'signup')">Sign up</button></span>
         </form>

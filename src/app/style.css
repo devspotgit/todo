@@ -1,4 +1,14 @@
 
+
+:root{
+    --black:hsl(0, 0%, 0%);
+    --grey:hsl(0, 0%, 20%);
+    --grey-light:hsl(0, 0%, 40%);
+    --grey-lighter:hsl(0, 0%, 60%);
+    --grey-lighter-plus:hsl(0, 0%, 80%);
+    --white:hsl(0, 0%, 100%);   
+}
+
 *{
     padding:0;
     margin:0;
@@ -7,6 +17,15 @@
 button{
     border-width:0;
     background-color:transparent;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:inherit;
+}
+
+input{
+    border-width:0;
+    font-family:inherit;
+    font-size:inherit;
 }
 
 a{
@@ -22,14 +41,327 @@ html, body{
 #root{
     width:100%;
     min-height:100%;
+    background-color:var(--grey);
+}
+
+.hidden{
+
+}
+
+.categories .active-category{
+    color:var(--grey-lighter);
+}
+
+.item-complete{
+
+}
+
+.item-active{
+
+}
+
+@keyframes spinner{
+
+    0%{
+        transform: rotate(0deg);
+    }
+
+    100%{
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes mes-anim{
+
+    10%{
+        top:10px;
+    }
+
+    90%{
+        top:10px;
+    }
+
+    100%{
+        top:-500px;
+    }
+
+}
+
+
+/* ----------------------------- spinner ----------------------------- */
+
+.spinner{
+    width:100%;
+    height:100vh;
+    position:fixed;
+    background-color: rgba(255, 255, 255, 0.5);
     display:flex;
     justify-content:center;
     align-items:center;
 }
 
-.home{
-    width:700px;
+.spinner > span{
+    font-size:3rem;
+    animation-name:spinner;
+    animation-duration:2s;
+    animation-iteration-count:infinite;
+    animation-timing-function:linear;
 }
+
+/* ----------------------------- message ----------------------------- */
+
+.message{
+    width:100%;
+    position:fixed;
+    top:-500px;
+    left:0;
+    z-index:3;
+}
+
+.message > div{
+    max-width:200px;
+    padding:10px;
+    border-radius:5px;
+    background-color:var(--grey);
+    margin-inline:auto;
+    text-align:center;
+    border:1px solid var(--grey-light);
+    color:var(--grey-lighter);
+    box-shadow:1px 1px 5px var(--black);
+}
+
+.mes-anim{
+    animation-name:mes-anim;
+    animation-duration:6s;
+    animation-timing-function:linear;
+}
+
+/* ----------------------------- form ----------------------------- */
+
+.form-wrapper{
+    width:100%;
+    height:100vh;
+    position:fixed;
+    background-color: rgba(255, 255, 255, 0.5);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:2;
+}
+
+.form{
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    background-color:var(--grey);
+    border:1px solid var(--grey-light);
+    border-radius:5px;
+    box-shadow:1px 1px 5px var(--black);
+}
+
+.form > span:first-of-type{
+    font-size:2rem;
+    color:var(--grey-light);
+    align-self:center;
+}
+
+.form > span:last-of-type{
+    color:var(--grey-light);
+}
+
+.form > span:last-of-type > button{
+    color:var(--grey-lighter);
+}
+
+.form > button:first-of-type{
+    align-self:end;
+    color:var(--grey-light);
+}
+
+.form > button:last-of-type{
+    padding:10px;
+    border-radius:5px;
+    border:1px solid var(--grey-light);
+    color:var(--grey-light);
+}
+
+.form > button:last-of-type:hover{
+    box-shadow:1px 1px 5px var(--black);
+}
+
+.form input{
+    padding:10px;
+    border-radius:5px;
+    color:var(--grey-light);
+}
+
+.form input::placeholder{
+    color:var(--grey-light);
+}
+
+/* ----------------------------- home ----------------------------- */
+
+.home{
+    max-width:500px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    padding-inline:20px;
+    margin-inline:auto;
+    box-sizing:border-box;
+}
+
+/* ----------------------------- header ----------------------------- */
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    position:relative;
+    padding-block:10px;
+}
+
+.header > a{
+    color:var(--grey-lighter);
+    font-size:2rem;
+}
+
+.header > button{
+    color:var(--grey-lighter);
+}
+
+/* .header > button:focus{
+    color:blue;
+} */
+
+.header-menu{
+    position:absolute;
+    top:100%;
+    right:0;
+    width:100px;
+    border:1px solid var(--grey-light);
+    box-shadow:1px 1px 5px var(--black);
+    display:flex;
+    flex-direction:column;
+    border-radius:5px;
+    background-color:var(--grey);
+    z-index:1;
+}
+
+.header-menu button{
+    padding:10px;
+    color:var(--grey-light);
+    text-align:center;
+}
+
+.header-menu button:hover{
+    color:var(--grey-lighter);
+}
+
+/* ----------------------------- categories ----------------------------- */
+
+.categories{
+    display:flex;
+    justify-content:space-around;
+}
+
+.categories button{
+    color:var(--grey-light);
+}
+
+.categories button:hover{
+    color:var(--grey-lighter);
+}
+
+@media(max-width:500px){
+
+    .categories{
+        flex-direction:column;
+        justify-content:initial;
+        gap:20px;
+    }
+
+    .categories button{
+        align-self:center;
+    }
+}
+
+/* ----------------------------- empty list ----------------------------- */
+
+.empty-list{
+    height:400px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border:1px solid var(--grey-light);
+    border-radius:5px;
+    background-color:var(--black);
+}
+
+.empty-list span{
+    font-size:2rem;
+    color:var(--grey-light);
+    text-align:center;
+}
+
+/* ----------------------------- list ----------------------------- */
+
+.list{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.item{
+    display:flex;
+    gap:20px;
+    position:relative;
+    justify-content:space-between;
+    padding:10px;
+    background-color:var(--black);
+    border-radius:5px;
+    align-items:center;
+    border:1px solid var(--grey-light);
+}
+
+.item > button:first-of-type{
+    width:10px;
+    height:10px;
+    border-radius:100%;
+    border:1px solid var(--grey);
+}
+
+.item > *{
+    color:var(--grey);
+}
+
+.item > span:first-of-type{
+    width:100px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.item-menu{
+    display:flex;
+    flex-direction:column;
+    width:100px;
+    top:100%;
+    right:0;
+    position:absolute;
+    border:1px solid var(--grey-light);
+    box-shadow:1px 1px 5px var(--black);
+    border-radius:5px;
+    background-color:var(--grey);
+    z-index:1;
+}
+
+.item-menu button{
+    padding:10px;
+    color:var(--grey-light);
+    text-align:center;
+}
+
 
 
 

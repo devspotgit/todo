@@ -11,7 +11,7 @@ import path from "path"
 
 import { fileURLToPath } from "url"
 
-import api from "../src/api.js"
+import serverRouter from "../src/server_router.js"
 
 import dotenv from "dotenv"
 
@@ -25,8 +25,6 @@ const app = express()
 
 dotenv.config()
 
-
-app.use("/api", api)
 
 app.use( async (req, res, next) => {
 
@@ -86,20 +84,7 @@ app.use( async (req, res, next) => {
     }
 })
 
-
-app.use((req, res) => {
-
-    const params = {
-
-        title: "Todo",
-
-        description: "My awesome todo app",
-
-        data: { username: "Patrick" }
-    }
-
-    res.send(layout(params))
-})
+app.use("/", serverRouter)
 
 app.listen(process.env.PORT, () => console.log("server listening on port "+process.env.PORT))
 

@@ -2,11 +2,19 @@
 
 <script>
 
+    export default{
+
+        props:{
+
+            message: String
+        }
+    }
+
 </script>
 
 <template>
     <div class="message">
-        <span>{{ formMessage }}</span>
+        <div>{{ message }}</div>
     </div>
 </template>
 
