@@ -2479,7 +2479,100 @@ var onRenderTracked = createHook("rtc");
 function onErrorCaptured(hook, target = currentInstance) {
   injectHook("ec", hook, target);
 }
+var COMPONENTS = "components";
+function resolveComponent(name, maybeSelfReference) {
+  return resolveAsset(COMPONENTS, name, true, maybeSelfReference) || name;
+}
 var NULL_DYNAMIC_COMPONENT = /* @__PURE__ */ Symbol.for("v-ndc");
+function resolveAsset(type, name, warnMissing = true, maybeSelfReference = false) {
+  const instance = currentRenderingInstance || currentInstance;
+  if (instance) {
+    const Component = instance.type;
+    if (type === COMPONENTS) {
+      const selfName = getComponentName(
+        Component,
+        false
+      );
+      if (selfName && (selfName === name || selfName === camelize(name) || selfName === capitalize(camelize(name)))) {
+        return Component;
+      }
+    }
+    const res = (
+      // local registration
+      // check instance[type] first which is resolved for options API
+      resolve(instance[type] || Component[type], name) || // global registration
+      resolve(instance.appContext[type], name)
+    );
+    if (!res && maybeSelfReference) {
+      return Component;
+    }
+    if (false) {
+      const extra = type === COMPONENTS ? `
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement.` : ``;
+      warn$1(`Failed to resolve ${type.slice(0, -1)}: ${name}${extra}`);
+    }
+    return res;
+  } else if (false) {
+    warn$1(
+      `resolve${capitalize(type.slice(0, -1))} can only be used in render() or setup().`
+    );
+  }
+}
+function resolve(registry, name) {
+  return registry && (registry[name] || registry[camelize(name)] || registry[capitalize(camelize(name))]);
+}
+function renderList(source, renderItem, cache, index) {
+  let ret;
+  const cached = cache && cache[index];
+  const sourceIsArray = isArray(source);
+  if (sourceIsArray || isString(source)) {
+    const sourceIsReactiveArray = sourceIsArray && isReactive(source);
+    let needsWrap = false;
+    let isReadonlySource = false;
+    if (sourceIsReactiveArray) {
+      needsWrap = !isShallow(source);
+      isReadonlySource = isReadonly(source);
+      source = shallowReadArray(source);
+    }
+    ret = new Array(source.length);
+    for (let i = 0, l = source.length; i < l; i++) {
+      ret[i] = renderItem(
+        needsWrap ? isReadonlySource ? toReadonly(toReactive(source[i])) : toReactive(source[i]) : source[i],
+        i,
+        void 0,
+        cached && cached[i]
+      );
+    }
+  } else if (typeof source === "number") {
+    if (false) {
+      warn$1(`The v-for range expect an integer value but got ${source}.`);
+    }
+    ret = new Array(source);
+    for (let i = 0; i < source; i++) {
+      ret[i] = renderItem(i + 1, i, void 0, cached && cached[i]);
+    }
+  } else if (isObject(source)) {
+    if (source[Symbol.iterator]) {
+      ret = Array.from(
+        source,
+        (item, i) => renderItem(item, i, void 0, cached && cached[i])
+      );
+    } else {
+      const keys = Object.keys(source);
+      ret = new Array(keys.length);
+      for (let i = 0, l = keys.length; i < l; i++) {
+        const key = keys[i];
+        ret[i] = renderItem(source[key], key, i, cached && cached[i]);
+      }
+    }
+  } else {
+    ret = [];
+  }
+  if (cache) {
+    cache[index] = ret;
+  }
+  return ret;
+}
 var getPublicInstance = (i) => {
   if (!i) return null;
   if (isStatefulComponent(i)) return getComponentPublicInstance(i);
@@ -2672,7 +2765,7 @@ function applyOptions(instance) {
     beforeUnmount,
     destroyed,
     unmounted,
-    render: render2,
+    render: render10,
     renderTracked,
     renderTriggered,
     errorCaptured,
@@ -2826,8 +2919,8 @@ function applyOptions(instance) {
       instance.exposed = {};
     }
   }
-  if (render2 && instance.render === NOOP) {
-    instance.render = render2;
+  if (render10 && instance.render === NOOP) {
+    instance.render = render10;
   }
   if (inheritAttrs != null) {
     instance.inheritAttrs = inheritAttrs;
@@ -3068,7 +3161,7 @@ function createAppContext() {
   };
 }
 var uid$1 = 0;
-function createAppAPI(render2, hydrate) {
+function createAppAPI(render10, hydrate) {
   return function createApp2(rootComponent, rootProps = null) {
     if (!isFunction(rootComponent)) {
       rootComponent = extend({}, rootComponent);
@@ -3172,13 +3265,13 @@ function createAppAPI(render2, hydrate) {
             context.reload = () => {
               const cloned = cloneVNode(vnode);
               cloned.el = null;
-              render2(cloned, rootContainer, namespace);
+              render10(cloned, rootContainer, namespace);
             };
           }
           if (isHydrate && hydrate) {
             hydrate(vnode, rootContainer);
           } else {
-            render2(vnode, rootContainer, namespace);
+            render10(vnode, rootContainer, namespace);
           }
           isMounted = true;
           app._container = rootContainer;
@@ -3210,7 +3303,7 @@ If you want to remount the same app, move your app creation logic into a factory
             app._instance,
             16
           );
-          render2(null, app._container);
+          render10(null, app._container);
           if (false) {
             app._instance = null;
             devtoolsUnmountApp(app);
@@ -3398,7 +3491,7 @@ function renderComponentRoot(instance) {
     slots,
     attrs,
     emit: emit2,
-    render: render2,
+    render: render10,
     renderCache,
     props,
     data,
@@ -3426,7 +3519,7 @@ function renderComponentRoot(instance) {
         }
       }) : proxyToUse;
       result = normalizeVNode(
-        render2.call(
+        render10.call(
           thisProxy,
           proxyToUse,
           renderCache,
@@ -5433,7 +5526,7 @@ function baseCreateRenderer(options, createHydrationFns) {
     return teleportEnd ? hostNextSibling(teleportEnd) : el;
   };
   let isFlushing = false;
-  const render2 = (vnode, container, namespace) => {
+  const render10 = (vnode, container, namespace) => {
     let instance;
     if (vnode == null) {
       if (container._vnode) {
@@ -5479,9 +5572,9 @@ function baseCreateRenderer(options, createHydrationFns) {
     );
   }
   return {
-    render: render2,
+    render: render10,
     hydrate,
-    createApp: createAppAPI(render2, hydrate)
+    createApp: createAppAPI(render10, hydrate)
   };
 }
 function resolveChildrenNamespace({ type, props }, currentNamespace) {
@@ -5646,6 +5739,18 @@ function createElementBlock(type, props, children, patchFlag, dynamicProps, shap
       patchFlag,
       dynamicProps,
       shapeFlag,
+      true
+    )
+  );
+}
+function createBlock(type, props, children, patchFlag, dynamicProps) {
+  return setupBlock(
+    createVNode(
+      type,
+      props,
+      children,
+      patchFlag,
+      dynamicProps,
       true
     )
   );
@@ -5855,6 +5960,9 @@ function cloneVNode(vnode, extraProps, mergeRef = false, cloneTransition = false
 }
 function createTextVNode(text = " ", flag = 0) {
   return createVNode(Text, null, text, flag);
+}
+function createCommentVNode(text = "", asBlock = false) {
+  return asBlock ? (openBlock(), createBlock(Comment, null, text)) : createVNode(Comment, null, text);
 }
 function normalizeVNode(child) {
   if (child == null || typeof child === "boolean") {
@@ -6333,6 +6441,9 @@ function getComponentPublicInstance(instance) {
   } else {
     return instance.proxy;
   }
+}
+function getComponentName(Component, includeInferred = true) {
+  return isFunction(Component) ? Component.displayName || Component.name : Component.name || includeInferred && Component.__name;
 }
 function isClassComponent(value) {
   return isFunction(value) && "__vccOpts" in value;
@@ -6817,31 +6928,928 @@ if (false) {
   initDev();
 }
 
+// sfc-script:/home/Patrick/tut/todo/src/app/login.vue?type=script
+var login_default = {
+  emits: ["setActiveForm", "setSpinner", "setMessage", "setUser", "setItemList"],
+  props: {
+    activeForm: Boolean
+  },
+  methods: {
+    formWrapperClicked(e) {
+      if (e.target == e.currentTarget) {
+        this.$emit("setActiveForm", "none");
+      }
+    },
+    async loginSubmit(e) {
+      e.preventDefault();
+      this.$emit("setSpinner", true);
+      const formData = new FormData(e.target);
+      const { data, error } = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("setUser", data.user);
+        this.$emit("setItemList", data.itemList);
+        this.$emit("setActiveForm", "none");
+        this.$emit("setMessage", "user login");
+      }
+    }
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/login.vue?type=template
+function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return $props.activeForm == "login" ? (openBlock(), createElementBlock("div", {
+    key: 0,
+    class: "form-wrapper",
+    onClick: _cache[3] || (_cache[3] = (...args) => $options.formWrapperClicked && $options.formWrapperClicked(...args))
+  }, [
+    createBaseVNode(
+      "form",
+      {
+        class: "form",
+        onSubmit: _cache[2] || (_cache[2] = (...args) => $options.loginSubmit && $options.loginSubmit(...args))
+      },
+      [
+        createBaseVNode("button", {
+          onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("setActiveForm", "none"))
+        }, [..._cache[4] || (_cache[4] = [
+          createBaseVNode(
+            "i",
+            { class: "fa-solid fa-x" },
+            null,
+            -1
+            /* CACHED */
+          )
+        ])]),
+        _cache[6] || (_cache[6] = createBaseVNode(
+          "span",
+          null,
+          "Login",
+          -1
+          /* CACHED */
+        )),
+        _cache[7] || (_cache[7] = createBaseVNode(
+          "input",
+          {
+            type: "text",
+            placeholder: "Email",
+            name: "email"
+          },
+          null,
+          -1
+          /* CACHED */
+        )),
+        _cache[8] || (_cache[8] = createBaseVNode(
+          "input",
+          {
+            type: "password",
+            placeholder: "Password",
+            name: "password"
+          },
+          null,
+          -1
+          /* CACHED */
+        )),
+        _cache[9] || (_cache[9] = createBaseVNode(
+          "button",
+          null,
+          "Submit",
+          -1
+          /* CACHED */
+        )),
+        createBaseVNode("span", null, [
+          _cache[5] || (_cache[5] = createTextVNode(
+            "Don't have an account yet, ",
+            -1
+            /* CACHED */
+          )),
+          createBaseVNode("button", {
+            onClick: _cache[1] || (_cache[1] = ($event) => _ctx.$emit("setActiveForm", "signup"))
+          }, "Sign up")
+        ])
+      ],
+      32
+      /* NEED_HYDRATION */
+    )
+  ])) : createCommentVNode("v-if", true);
+}
+
+// src/app/login.vue
+login_default.render = render;
+login_default.__file = "src/app/login.vue";
+var login_default2 = login_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/signup.vue?type=script
+var signup_default = {
+  emits: ["setActiveForm", "setSpinner", "setMessage"],
+  props: {
+    activeForm: Boolean
+  },
+  methods: {
+    formWrapperClicked(e) {
+      if (e.target == e.currentTarget) {
+        this.$emit("setActiveForm", "none");
+      }
+    },
+    async signupSubmit(e) {
+      e.preventDefault();
+      this.$emit("setSpinner", true);
+      const formData = new FormData(e.target);
+      const { error, data } = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("setMessage", "account created, login now");
+        this.$emit("setActiveForm", "login");
+      }
+    }
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/signup.vue?type=template
+function render2(_ctx, _cache, $props, $setup, $data, $options) {
+  return $props.activeForm == "signup" ? (openBlock(), createElementBlock("div", {
+    key: 0,
+    class: "form-wrapper",
+    onClick: _cache[3] || (_cache[3] = (...args) => $options.formWrapperClicked && $options.formWrapperClicked(...args))
+  }, [
+    createBaseVNode(
+      "form",
+      {
+        class: "form",
+        onSubmit: _cache[2] || (_cache[2] = (...args) => $options.signupSubmit && $options.signupSubmit(...args))
+      },
+      [
+        createBaseVNode("button", {
+          onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("setActiveForm", "none"))
+        }, [..._cache[4] || (_cache[4] = [
+          createBaseVNode(
+            "i",
+            { class: "fa-solid fa-x" },
+            null,
+            -1
+            /* CACHED */
+          )
+        ])]),
+        _cache[6] || (_cache[6] = createBaseVNode(
+          "span",
+          null,
+          "Sign up",
+          -1
+          /* CACHED */
+        )),
+        _cache[7] || (_cache[7] = createBaseVNode(
+          "input",
+          {
+            type: "text",
+            placeholder: "Email",
+            name: "email"
+          },
+          null,
+          -1
+          /* CACHED */
+        )),
+        _cache[8] || (_cache[8] = createBaseVNode(
+          "input",
+          {
+            type: "password",
+            placeholder: "Password",
+            name: "password"
+          },
+          null,
+          -1
+          /* CACHED */
+        )),
+        _cache[9] || (_cache[9] = createBaseVNode(
+          "button",
+          null,
+          "Submit",
+          -1
+          /* CACHED */
+        )),
+        createBaseVNode("span", null, [
+          _cache[5] || (_cache[5] = createTextVNode(
+            "Already have an account, ",
+            -1
+            /* CACHED */
+          )),
+          createBaseVNode("button", {
+            onClick: _cache[1] || (_cache[1] = ($event) => _ctx.$emit("setActiveForm", "login"))
+          }, "Login")
+        ])
+      ],
+      32
+      /* NEED_HYDRATION */
+    )
+  ])) : createCommentVNode("v-if", true);
+}
+
+// src/app/signup.vue
+signup_default.render = render2;
+signup_default.__file = "src/app/signup.vue";
+var signup_default2 = signup_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/spinner.vue?type=script
+var spinner_default = {
+  props: {
+    spinner: Boolean
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/spinner.vue?type=template
+var _hoisted_1 = {
+  key: 0,
+  class: "spinner"
+};
+function render3(_ctx, _cache, $props, $setup, $data, $options) {
+  return $props.spinner ? (openBlock(), createElementBlock("div", _hoisted_1, [..._cache[0] || (_cache[0] = [
+    createBaseVNode(
+      "span",
+      null,
+      [
+        createBaseVNode("i", { class: "fa-solid fa-spinner" })
+      ],
+      -1
+      /* CACHED */
+    )
+  ])])) : createCommentVNode("v-if", true);
+}
+
+// src/app/spinner.vue
+spinner_default.render = render3;
+spinner_default.__file = "src/app/spinner.vue";
+var spinner_default2 = spinner_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/add_item.vue?type=script
+var add_item_default = {
+  emits: ["setActiveForm", "setSpinner", "setMessage", "addItem"],
+  props: {
+    activeForm: Boolean
+  },
+  methods: {
+    formWrapperClicked(e) {
+      if (e.target == e.currentTarget) {
+        this.$emit("setActiveForm", "none");
+      }
+    },
+    async addItemSubmit(e) {
+      e.preventDefault();
+      this.$emit("setSpinner", true);
+      const formData = new FormData(e.target);
+      const { error, data } = await fetch("/api/add-item", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("addItem", data);
+        this.$emit("setMessage", "item added");
+        this.$emit("setActiveForm", "none");
+      }
+    }
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/add_item.vue?type=template
+function render4(_ctx, _cache, $props, $setup, $data, $options) {
+  return $props.activeForm == "add_item" ? (openBlock(), createElementBlock("div", {
+    key: 0,
+    class: "form-wrapper",
+    onClick: _cache[2] || (_cache[2] = (...args) => $options.formWrapperClicked && $options.formWrapperClicked(...args))
+  }, [
+    createBaseVNode(
+      "form",
+      {
+        class: "form",
+        onSubmit: _cache[1] || (_cache[1] = (...args) => $options.addItemSubmit && $options.addItemSubmit(...args))
+      },
+      [
+        createBaseVNode("button", {
+          onClick: _cache[0] || (_cache[0] = ($event) => this.$emit("setActiveForm", "none"))
+        }, [..._cache[3] || (_cache[3] = [
+          createBaseVNode(
+            "i",
+            { class: "fa-solid fa-x" },
+            null,
+            -1
+            /* CACHED */
+          )
+        ])]),
+        _cache[4] || (_cache[4] = createBaseVNode(
+          "span",
+          null,
+          "Add Item",
+          -1
+          /* CACHED */
+        )),
+        _cache[5] || (_cache[5] = createBaseVNode(
+          "input",
+          {
+            type: "text",
+            placeholder: "Item name",
+            name: "name"
+          },
+          null,
+          -1
+          /* CACHED */
+        )),
+        _cache[6] || (_cache[6] = createBaseVNode(
+          "button",
+          null,
+          "Submit",
+          -1
+          /* CACHED */
+        ))
+      ],
+      32
+      /* NEED_HYDRATION */
+    )
+  ])) : createCommentVNode("v-if", true);
+}
+
+// src/app/add_item.vue
+add_item_default.render = render4;
+add_item_default.__file = "src/app/add_item.vue";
+var add_item_default2 = add_item_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/item.vue?type=script
+var item_default = {
+  emits: ["setActiveForm", "setItem", "setCurrentItem"],
+  props: {
+    item: Object
+  },
+  methods: {
+    renameItem() {
+      this.$emit("setCurrentItem", this.item);
+      this.$emit("setActiveForm", "rename_item");
+    }
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/item.vue?type=template
+var _hoisted_12 = { class: "item" };
+var _hoisted_2 = { class: "item-menu" };
+function render5(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", _hoisted_12, [
+    createBaseVNode(
+      "button",
+      {
+        class: normalizeClass($props.item.selected ? "selected" : ""),
+        onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("setItem", $props.item))
+      },
+      null,
+      2
+      /* CLASS */
+    ),
+    createBaseVNode(
+      "span",
+      null,
+      toDisplayString($props.item.name),
+      1
+      /* TEXT */
+    ),
+    createBaseVNode(
+      "span",
+      {
+        class: normalizeClass($props.item.status == "complete" ? "item-complete" : "item-active")
+      },
+      toDisplayString($props.item.status),
+      3
+      /* TEXT, CLASS */
+    ),
+    createBaseVNode("button", null, [
+      _cache[2] || (_cache[2] = createBaseVNode(
+        "i",
+        { class: "fa-solid fa-ellipsis-vertical" },
+        null,
+        -1
+        /* CACHED */
+      )),
+      createBaseVNode("div", _hoisted_2, [
+        createBaseVNode("button", {
+          onClick: _cache[1] || (_cache[1] = (...args) => $options.renameItem && $options.renameItem(...args))
+        }, "Rename")
+      ])
+    ]),
+    createBaseVNode(
+      "span",
+      null,
+      toDisplayString($props.item.name),
+      1
+      /* TEXT */
+    )
+  ]);
+}
+
+// src/app/item.vue
+item_default.render = render5;
+item_default.__file = "src/app/item.vue";
+var item_default2 = item_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/home.vue?type=script
+var home_default = {
+  emits: ["setCurrentItem", "setActiveForm", "setSpinner", "setMessage", "setUser", "deleteSelected", "setActiveCategory", "setSelectedActive", "setSelectedComplete", "setItem", "setItemList"],
+  props: {
+    user: String,
+    activeCategory: String,
+    itemList: Array
+  },
+  components: {
+    Item: item_default2
+  },
+  methods: {
+    async logout() {
+      this.$emit("setSpinner", true);
+      const { error, data } = await fetch("/api/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("setUser", null);
+        this.$emit("setItemList", []);
+        this.$emit("setMessage", "user logout");
+      }
+    },
+    async deleteSelected() {
+      this.$emit("setSpinner", true);
+      const selectedItems = this.itemList.filter((item) => item.selected == true);
+      const { error, data } = await fetch("/api/delete-item", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(
+          {
+            items: selectedItems
+          }
+        )
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("deleteSelected", selectedItems);
+        this.$emit("setMessage", "item deleted");
+      }
+    },
+    async setSelectedActive() {
+      this.$emit("setSpinner", true);
+      const selectedItems = this.itemList.filter((item) => item.selected == true);
+      const { error, data } = await fetch("/api/set-active", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(
+          {
+            items: selectedItems
+          }
+        )
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("setSelectedActive", selectedItems);
+        this.$emit("setMessage", "item set active");
+      }
+    },
+    async setSelectedComplete() {
+      this.$emit("setSpinner", true);
+      const selectedItems = this.itemList.filter((item) => item.selected == true);
+      const { error, data } = await fetch("/api/set-complete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(
+          {
+            items: selectedItems
+          }
+        )
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("setSelectedComplete", selectedItems);
+        this.$emit("setMessage", "item set complete");
+      }
+    }
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/home.vue?type=template
+var _hoisted_13 = { class: "home" };
+var _hoisted_22 = { class: "header" };
+var _hoisted_3 = { class: "header-menu" };
+var _hoisted_4 = { class: "categories" };
+var _hoisted_5 = {
+  key: 0,
+  class: "control"
+};
+var _hoisted_6 = {
+  key: 1,
+  class: "list"
+};
+var _hoisted_7 = {
+  key: 2,
+  class: "empty-list"
+};
+function render6(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_Item = resolveComponent("Item");
+  return openBlock(), createElementBlock("div", _hoisted_13, [
+    createBaseVNode("div", _hoisted_22, [
+      _cache[11] || (_cache[11] = createBaseVNode(
+        "a",
+        { href: "/" },
+        "TODO",
+        -1
+        /* CACHED */
+      )),
+      createBaseVNode("button", null, [
+        _cache[10] || (_cache[10] = createBaseVNode(
+          "i",
+          { class: "fa-solid fa-ellipsis-vertical" },
+          null,
+          -1
+          /* CACHED */
+        )),
+        createBaseVNode("div", _hoisted_3, [
+          !$props.user ? (openBlock(), createElementBlock("button", {
+            key: 0,
+            onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("setActiveForm", "login"))
+          }, "Login")) : createCommentVNode("v-if", true),
+          $props.user ? (openBlock(), createElementBlock("button", {
+            key: 1,
+            onClick: _cache[1] || (_cache[1] = (...args) => $options.logout && $options.logout(...args))
+          }, "Logout")) : createCommentVNode("v-if", true),
+          $props.user ? (openBlock(), createElementBlock("button", {
+            key: 2,
+            onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("setActiveForm", "add_item"))
+          }, "Add Item")) : createCommentVNode("v-if", true)
+        ])
+      ])
+    ]),
+    createBaseVNode("div", _hoisted_4, [
+      createBaseVNode(
+        "button",
+        {
+          class: normalizeClass($props.activeCategory == "all" ? "active-category" : ""),
+          onClick: _cache[3] || (_cache[3] = ($event) => _ctx.$emit("setActiveCategory", "all"))
+        },
+        "All",
+        2
+        /* CLASS */
+      ),
+      createBaseVNode(
+        "button",
+        {
+          class: normalizeClass($props.activeCategory == "complete" ? "active-category" : ""),
+          onClick: _cache[4] || (_cache[4] = ($event) => _ctx.$emit("setActiveCategory", "complete"))
+        },
+        "Completed",
+        2
+        /* CLASS */
+      ),
+      createBaseVNode(
+        "button",
+        {
+          class: normalizeClass($props.activeCategory == "active" ? "active-category" : ""),
+          onClick: _cache[5] || (_cache[5] = ($event) => _ctx.$emit("setActiveCategory", "active"))
+        },
+        "Active",
+        2
+        /* CLASS */
+      )
+    ]),
+    $props.itemList.filter((item) => item.selected == true).length != 0 ? (openBlock(), createElementBlock("div", _hoisted_5, [
+      createBaseVNode("button", {
+        onClick: _cache[6] || (_cache[6] = (...args) => $options.deleteSelected && $options.deleteSelected(...args))
+      }, "Delete"),
+      createBaseVNode("button", {
+        onClick: _cache[7] || (_cache[7] = (...args) => $options.setSelectedComplete && $options.setSelectedComplete(...args))
+      }, "Set complete"),
+      createBaseVNode("button", {
+        onClick: _cache[8] || (_cache[8] = (...args) => $options.setSelectedActive && $options.setSelectedActive(...args))
+      }, "Set active")
+    ])) : createCommentVNode("v-if", true),
+    $props.itemList.length != 0 ? (openBlock(), createElementBlock("div", _hoisted_6, [
+      (openBlock(true), createElementBlock(
+        Fragment,
+        null,
+        renderList($props.itemList, (item) => {
+          return openBlock(), createBlock(_component_Item, {
+            key: item._id,
+            item,
+            onSetItem: (item2) => _ctx.$emit("setItem", item2),
+            onSetActiveForm: _cache[9] || (_cache[9] = (form) => _ctx.$emit("setActiveForm", form)),
+            onSetCurrentItem: (item2) => _ctx.$emit("setCurrentItem", item2)
+          }, null, 8, ["item", "onSetItem", "onSetCurrentItem"]);
+        }),
+        128
+        /* KEYED_FRAGMENT */
+      ))
+    ])) : createCommentVNode("v-if", true),
+    $props.itemList.length == 0 ? (openBlock(), createElementBlock("div", _hoisted_7, [..._cache[12] || (_cache[12] = [
+      createBaseVNode(
+        "span",
+        null,
+        "No items found",
+        -1
+        /* CACHED */
+      )
+    ])])) : createCommentVNode("v-if", true)
+  ]);
+}
+
+// src/app/home.vue
+home_default.render = render6;
+home_default.__file = "src/app/home.vue";
+var home_default2 = home_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/rename_item.vue?type=script
+var rename_item_default = {
+  emits: ["setActiveForm", "setSpinner", "setMessage", "setItemName"],
+  props: {
+    activeForm: Boolean,
+    item: Object
+  },
+  methods: {
+    formWrapperClicked(e) {
+      if (e.target == e.currentTarget) {
+        this.$emit("setActiveForm", "none");
+      }
+    },
+    async renameSubmit(e) {
+      e.preventDefault();
+      this.$emit("setSpinner", true);
+      const formData = new FormData(e.target);
+      const { data, error } = await fetch("/api/rename-item", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          item: this.item,
+          name: formData.get("name")
+        })
+      }).then((res) => res.json());
+      this.$emit("setSpinner", false);
+      if (error) {
+        this.$emit("setMessage", error.message);
+      } else {
+        this.$emit("setItemName", {
+          item: this.item,
+          name: formData.get("name")
+        });
+        this.$emit("setActiveForm", "none");
+        this.$emit("setMessage", "item renamed");
+      }
+    }
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/rename_item.vue?type=template
+function render7(_ctx, _cache, $props, $setup, $data, $options) {
+  return $props.activeForm == "rename_item" ? (openBlock(), createElementBlock("div", {
+    key: 0,
+    class: "form-wrapper",
+    onClick: _cache[2] || (_cache[2] = (...args) => $options.formWrapperClicked && $options.formWrapperClicked(...args))
+  }, [
+    createBaseVNode(
+      "form",
+      {
+        class: "form",
+        onSubmit: _cache[1] || (_cache[1] = (...args) => $options.renameSubmit && $options.renameSubmit(...args))
+      },
+      [
+        createBaseVNode("button", {
+          onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("setActiveForm", "none"))
+        }, [..._cache[3] || (_cache[3] = [
+          createBaseVNode(
+            "i",
+            { class: "fa-solid fa-x" },
+            null,
+            -1
+            /* CACHED */
+          )
+        ])]),
+        _cache[4] || (_cache[4] = createBaseVNode(
+          "span",
+          null,
+          "Rename Item",
+          -1
+          /* CACHED */
+        )),
+        _cache[5] || (_cache[5] = createBaseVNode(
+          "input",
+          {
+            type: "text",
+            placeholder: "Item name",
+            name: "name"
+          },
+          null,
+          -1
+          /* CACHED */
+        )),
+        _cache[6] || (_cache[6] = createBaseVNode(
+          "button",
+          null,
+          "Submit",
+          -1
+          /* CACHED */
+        ))
+      ],
+      32
+      /* NEED_HYDRATION */
+    )
+  ])) : createCommentVNode("v-if", true);
+}
+
+// src/app/rename_item.vue
+rename_item_default.render = render7;
+rename_item_default.__file = "src/app/rename_item.vue";
+var rename_item_default2 = rename_item_default;
+
+// sfc-script:/home/Patrick/tut/todo/src/app/message.vue?type=script
+var message_default = {
+  props: {
+    message: String
+  }
+};
+
+// sfc-template:/home/Patrick/tut/todo/src/app/message.vue?type=template
+var _hoisted_14 = { class: "message" };
+function render8(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", _hoisted_14, [
+    createBaseVNode(
+      "div",
+      null,
+      toDisplayString($props.message),
+      1
+      /* TEXT */
+    )
+  ]);
+}
+
+// src/app/message.vue
+message_default.render = render8;
+message_default.__file = "src/app/message.vue";
+var message_default2 = message_default;
+
 // sfc-script:/home/Patrick/tut/todo/src/app/main.vue?type=script
 var main_default = {
-  data() {
-    return {
-      message: "hello world"
-    };
-  },
   props: {
     data: Object
+  },
+  data() {
+    return {
+      activeForm: "",
+      message: "",
+      spinner: false,
+      itemList: this.data.itemList,
+      user: this.data.user,
+      activeCategory: "all",
+      currentItem: null
+    };
+  },
+  components: {
+    Spinner: spinner_default2,
+    Signup: signup_default2,
+    Login: login_default2,
+    AddItem: add_item_default2,
+    Home: home_default2,
+    RenameItem: rename_item_default2,
+    Message: message_default2
+  },
+  methods: {
+    setMessage(mes) {
+      this.message = mes;
+      setTimeout(() => {
+        this.message = "";
+      }, 5e3);
+    },
+    setItem(item) {
+      const selectedItem = this.itemList.find((_item) => _item == item);
+      selectedItem.selected = !selectedItem.selected;
+    },
+    setItemName({ item, name }) {
+      const _item = this.itemList.find((__item) => __item == item);
+      _item.name = name;
+    },
+    deleteSelected(items) {
+      this.itemList = this.itemList.filter((item) => {
+        if (items.find((_item) => item == _item)) return false;
+        else return true;
+      });
+    },
+    setSelectedActive(items) {
+      items.forEach((item) => item.status = "active");
+    },
+    setSelectedComplete(items) {
+      items.forEach((item) => item.status = "complete");
+    }
   }
 };
 
 // sfc-template:/home/Patrick/tut/todo/src/app/main.vue?type=template
-function render(_ctx, _cache, $props, $setup, $data, $options) {
+function render9(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_Spinner = resolveComponent("Spinner");
+  const _component_Message = resolveComponent("Message");
+  const _component_Signup = resolveComponent("Signup");
+  const _component_Login = resolveComponent("Login");
+  const _component_AddItem = resolveComponent("AddItem");
+  const _component_RenameItem = resolveComponent("RenameItem");
+  const _component_Home = resolveComponent("Home");
   return openBlock(), createElementBlock(
-    "div",
+    Fragment,
     null,
-    toDisplayString($props.data.username),
-    1
-    /* TEXT */
+    [
+      createVNode(_component_Spinner, { spinner: $data.spinner }, null, 8, ["spinner"]),
+      createVNode(_component_Message, {
+        class: normalizeClass($data.message ? "mes-anim" : ""),
+        message: $data.message
+      }, null, 8, ["class", "message"]),
+      createVNode(_component_Signup, {
+        "active-form": $data.activeForm,
+        onSetActiveForm: _cache[0] || (_cache[0] = (form) => $data.activeForm = form),
+        onSetMessage: $options.setMessage,
+        onSetSpinner: _cache[1] || (_cache[1] = (val) => $data.spinner = val)
+      }, null, 8, ["active-form", "onSetMessage"]),
+      createVNode(_component_Login, {
+        "active-form": $data.activeForm,
+        onSetActiveForm: _cache[2] || (_cache[2] = (form) => $data.activeForm = form),
+        onSetMessage: $options.setMessage,
+        onSetSpinner: _cache[3] || (_cache[3] = (val) => $data.spinner = val),
+        onSetUser: _cache[4] || (_cache[4] = (val) => $data.user = val),
+        onSetItemList: _cache[5] || (_cache[5] = (items) => $data.itemList = items)
+      }, null, 8, ["active-form", "onSetMessage"]),
+      createVNode(_component_AddItem, {
+        "active-form": $data.activeForm,
+        onSetActiveForm: _cache[6] || (_cache[6] = (form) => $data.activeForm = form),
+        onSetMessage: $options.setMessage,
+        onSetSpinner: _cache[7] || (_cache[7] = (val) => $data.spinner = val),
+        onAddItem: _cache[8] || (_cache[8] = (item) => $data.itemList.push(item))
+      }, null, 8, ["active-form", "onSetMessage"]),
+      createVNode(_component_RenameItem, {
+        "active-form": $data.activeForm,
+        item: $data.currentItem,
+        onSetActiveForm: _cache[9] || (_cache[9] = (form) => $data.activeForm = form),
+        onSetItemName: $options.setItemName,
+        onSetMessage: $options.setMessage,
+        onSetSpinner: _cache[10] || (_cache[10] = (val) => $data.spinner = val)
+      }, null, 8, ["active-form", "item", "onSetItemName", "onSetMessage"]),
+      createVNode(_component_Home, {
+        user: $data.user,
+        "active-category": $data.activeCategory,
+        "item-list": $data.activeCategory == "all" ? $data.itemList : $data.activeCategory == "active" ? $data.itemList.filter((item) => item.status == "active") : $data.itemList.filter((item) => item.status == "complete"),
+        onSetActiveCategory: _cache[11] || (_cache[11] = (category) => $data.activeCategory = category),
+        onSetActiveForm: _cache[12] || (_cache[12] = (form) => $data.activeForm = form),
+        onSetCurrentItem: _cache[13] || (_cache[13] = (item) => $data.currentItem = item),
+        onSetItem: $options.setItem,
+        onSetUser: _cache[14] || (_cache[14] = (val) => $data.user = val),
+        onSetItemList: _cache[15] || (_cache[15] = (val) => $data.itemList = val),
+        onSetMessage: $options.setMessage,
+        onSetSpinner: _cache[16] || (_cache[16] = (val) => $data.spinner = val),
+        onDeleteSelected: $options.deleteSelected,
+        onSetSelectedActive: $options.setSelectedActive,
+        onSetSelectedComplete: $options.setSelectedComplete
+      }, null, 8, ["user", "active-category", "item-list", "onSetItem", "onSetMessage", "onDeleteSelected", "onSetSelectedActive", "onSetSelectedComplete"])
+    ],
+    64
+    /* STABLE_FRAGMENT */
   );
 }
 
 // src/app/main.vue
-main_default.render = render;
+main_default.render = render9;
 main_default.__file = "src/app/main.vue";
 var main_default2 = main_default;
 

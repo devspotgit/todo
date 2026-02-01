@@ -31,7 +31,7 @@
 
                 const formData = new FormData(e.target)
 
-                const { data, error } = await fetch("/api/rename", {
+                const { data, error } = await fetch("/api/rename-item", {
 
                     method: "POST",
 

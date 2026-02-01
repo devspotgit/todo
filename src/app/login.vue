@@ -54,6 +54,8 @@
                     this.$emit("setItemList", data.itemList)
 
                     this.$emit("setActiveForm", "none")
+
+                    this.$emit("setMessage", "user login")
                 }
             }
         }

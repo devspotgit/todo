@@ -1,5 +1,337 @@
 /* src/app/style.css */
+:root {
+  --black:hsl(0, 0%, 0%);
+  --grey:hsl(0, 0%, 20%);
+  --grey-light:hsl(0, 0%, 40%);
+  --grey-lighter:hsl(0, 0%, 60%);
+  --grey-lighter-plus:hsl(0, 0%, 80%);
+  --white:hsl(0, 0%, 100%);
+}
 * {
   padding: 0;
   margin: 0;
+}
+button {
+  border-width: 0;
+  background-color: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+input {
+  border-width: 0;
+  font-family: inherit;
+  font-size: inherit;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+#root {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--grey);
+}
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes mes-anim {
+  10% {
+    top: 10px;
+  }
+  90% {
+    top: 10px;
+  }
+  100% {
+    top: -500px;
+  }
+}
+.spinner {
+  width: 100%;
+  height: 100vh;
+  position: fixed;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+}
+.spinner > span {
+  font-size: 3rem;
+  animation-name: spinner;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+.message {
+  width: 100%;
+  position: fixed;
+  top: -500px;
+  left: 0;
+  z-index: 3;
+}
+.message > div {
+  max-width: 200px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: var(--grey);
+  margin-inline: auto;
+  text-align: center;
+  border: 1px solid var(--grey-light);
+  color: var(--grey-lighter);
+  box-shadow: 1px 1px 5px var(--black);
+}
+.mes-anim {
+  animation-name: mes-anim;
+  animation-duration: 5s;
+  animation-timing-function: linear;
+}
+.form-wrapper {
+  width: 100%;
+  height: 100vh;
+  position: fixed;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+.form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: var(--grey);
+  border: 1px solid var(--grey-light);
+  border-radius: 5px;
+  box-shadow: 1px 1px 5px var(--black);
+}
+.form > span:first-of-type {
+  font-size: 2rem;
+  color: var(--grey-light);
+  align-self: center;
+}
+.form > span:last-of-type {
+  color: var(--grey-light);
+}
+.form > span:last-of-type > button {
+  color: var(--grey-lighter);
+}
+.form > button:first-of-type {
+  align-self: end;
+  color: var(--grey-light);
+}
+.form > button:last-of-type {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--grey-light);
+  color: var(--grey-light);
+}
+.form > button:last-of-type:hover {
+  box-shadow: 1px 1px 5px var(--black);
+}
+.form input {
+  padding: 10px;
+  border-radius: 5px;
+  color: var(--grey-light);
+}
+.form input::placeholder {
+  color: var(--grey-light);
+}
+.home {
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-inline: 20px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding-block: 10px;
+  margin-top: 60px;
+  position: relative;
+}
+.header > a {
+  color: var(--grey-lighter);
+  font-size: 2rem;
+}
+.header > button {
+  color: var(--grey-lighter);
+}
+.header > button:focus-within .header-menu {
+  display: flex;
+}
+.header-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 100px;
+  border: 1px solid var(--grey-light);
+  box-shadow: 1px 1px 5px var(--black);
+  display: none;
+  flex-direction: column;
+  border-radius: 5px;
+  background-color: var(--grey);
+  z-index: 1;
+}
+.header-menu button {
+  padding: 10px;
+  color: var(--grey-light);
+  text-align: center;
+}
+.header-menu button:hover {
+  color: var(--grey-lighter);
+}
+.categories {
+  display: flex;
+  justify-content: space-around;
+}
+.categories .active-category {
+  color: var(--grey-lighter);
+}
+.categories button {
+  color: var(--grey-light);
+}
+.categories button:hover {
+  color: var(--grey-lighter);
+}
+@media (max-width: 500px) {
+  .categories {
+    flex-direction: column;
+    justify-content: initial;
+    gap: 15px;
+  }
+  .categories button {
+    align-self: center;
+  }
+}
+.empty-list {
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--grey-light);
+  border-radius: 5px;
+  background-color: var(--black);
+}
+.empty-list span {
+  font-size: 2rem;
+  color: var(--grey-light);
+  text-align: center;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.item {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: var(--black);
+  border-radius: 5px;
+  align-items: center;
+  border: 1px solid var(--grey-light);
+}
+.item:hover > :last-child {
+  display: initial;
+}
+.item > :last-child {
+  position: absolute;
+  padding: 10px;
+  border: 1px solid var(--grey-light);
+  box-shadow: 1px 1px 5px var(--black);
+  border-radius: 5px;
+  background-color: var(--grey);
+  bottom: 100%;
+  color: var(--grey-light);
+  display: none;
+  left: 0;
+}
+.item .item-complete {
+  color: hsl(120, 100%, 40%);
+}
+.item .item-active {
+  color: hsl(39, 100%, 40%);
+}
+.item > button:first-of-type {
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+  border: 1px solid var(--grey);
+}
+.item .selected {
+  background-color: var(--white);
+}
+.item > button:last-of-type:focus-within .item-menu {
+  display: flex;
+}
+.item > * {
+  color: var(--grey);
+}
+.item > span:first-of-type {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.item-menu {
+  display: none;
+  flex-direction: column;
+  width: 100px;
+  top: 100%;
+  right: 0;
+  position: absolute;
+  border: 1px solid var(--grey-light);
+  box-shadow: 1px 1px 5px var(--black);
+  border-radius: 5px;
+  background-color: var(--grey);
+  z-index: 1;
+}
+.item-menu button {
+  padding: 10px;
+  color: var(--grey-light);
+  text-align: center;
+}
+.item-menu button:hover {
+  color: var(--grey-lighter);
+}
+.control {
+  display: flex;
+  justify-content: space-around;
+}
+.control button {
+  border: 1px solid var(--grey-light);
+  box-shadow: 1px 1px 5px var(--black);
+  border-radius: 5px;
+  background-color: var(--grey);
+  padding: 10px;
+  color: var(--grey-light);
+}
+.control button:hover {
+  color: var(--grey-lighter);
+}
+@media (max-width: 500px) {
+  .control {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .control button {
+    align-self: center;
+  }
 }

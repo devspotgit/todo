@@ -6,7 +6,7 @@
 
     export default{
 
-        emits:[ "setActiveForm", "setSpinner", "setMessage", "setUser", "deleteSelected", "setActiveCategory", "setSelectedActive", "setSelectedComplete", "setItem" ],
+        emits:[ "setCurrentItem", "setActiveForm", "setSpinner", "setMessage", "setUser", "deleteSelected", "setActiveCategory", "setSelectedActive", "setSelectedComplete", "setItem", "setItemList" ],
 
         props:{
 
@@ -20,14 +20,6 @@
         components:{
 
             Item
-        },
-
-        data(){
-
-            return {
-
-                headerMenuHidden: false
-            }
         },
 
         methods:{
@@ -59,7 +51,7 @@
 
                     this.$emit("setUser", null)
 
-                    this.$emit("setItemList", [ ])
+                    this.$emit("setItemList", [])
 
                     this.$emit("setMessage", "user logout")
                 }
@@ -68,6 +60,8 @@
             async deleteSelected(){
 
                 this.$emit("setSpinner", true)
+                
+                const selectedItems = this.itemList.filter(item => item.selected == true)
 
                 const { error, data } = await fetch("/api/delete-item", {
 
@@ -78,7 +72,12 @@
                         "Content-Type": "application/json"
                     },
 
-                    body: JSON.stringify(this.itemList.filter(item => item.selected == true))
+                    body: JSON.stringify(
+
+                        {
+                            items: selectedItems
+                        }    
+                    )
 
                 }).then(res => res.json())
 
@@ -90,7 +89,7 @@
                 }
                 else{
 
-                    this.$emit("deleteSelected", "")
+                    this.$emit("deleteSelected", selectedItems)
 
                     this.$emit("setMessage", "item deleted")
                 }
@@ -99,6 +98,8 @@
             async setSelectedActive(){
 
                 this.$emit("setSpinner", true)
+
+                const selectedItems = this.itemList.filter(item => item.selected == true)
 
                 const { error, data } = await fetch("/api/set-active", {
 
@@ -109,7 +110,12 @@
                         "Content-Type": "application/json"
                     },
 
-                    body: JSON.stringify(this.itemList.filter(item => item.selected == true))
+                    body: JSON.stringify(
+
+                        {
+                            items: selectedItems
+                        }    
+                    )
 
                 }).then(res => res.json())
 
@@ -121,7 +127,7 @@
                 }
                 else{
 
-                    this.$emit("setSelectedActive", "")
+                    this.$emit("setSelectedActive", selectedItems)
 
                     this.$emit("setMessage", "item set active")
                 }
@@ -129,7 +135,9 @@
 
             async setSelectedComplete(){
 
-                this.$emit("spinner", true)
+                this.$emit("setSpinner", true)
+
+                const selectedItems = this.itemList.filter(item => item.selected == true)
 
                 const { error, data } = await fetch("/api/set-complete", {
 
@@ -140,11 +148,16 @@
                         "Content-Type": "application/json" 
                     },
 
-                    body: JSON.stringify(this.itemList.filter(item => item.selected == true))
+                    body: JSON.stringify(
+
+                        {
+                            items: selectedItems
+                        }    
+                    )
 
                 }).then(res => res.json())
 
-                this.$emit("spinner", false)
+                this.$emit("setSpinner", false)
 
                 if(error){
 
@@ -152,11 +165,10 @@
                 }
                 else{
 
-                    this.$emit("setSelectedComplete", "")
+                    this.$emit("setSelectedComplete", selectedItems)
 
                     this.$emit("setMessage", "item set complete")
                 }
-
             } 
         }
     }
@@ -168,12 +180,14 @@
     <div class="home">
         <div class="header">
             <a href="/">TODO</a>
-            <button @click="headerMenuHidden = !headerMenuHidden"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            <div v-if="headerMenuHidden" class="header-menu">
-                <button @click="$emit('setActiveForm', 'login')" v-if="!user">Login</button>
-                <button v-if="user" @click="logout">Logout</button>
-                <button @click="$emit('setActiveForm', 'add_item')" v-if="user">Add Item</button>
-            </div>
+            <button>
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+                <div class="header-menu">
+                    <button @click="$emit('setActiveForm', 'login')" v-if="!user">Login</button>
+                    <button v-if="user" @click="logout">Logout</button>
+                    <button @click="$emit('setActiveForm', 'add_item')" v-if="user">Add Item</button>
+                </div>
+            </button>
         </div>
         <div class="categories">
             <button :class="activeCategory == 'all' ? 'active-category': ''" @click="$emit('setActiveCategory', 'all')">All</button>
@@ -183,10 +197,17 @@
         <div class="control" v-if="itemList.filter(item => item.selected == true).length != 0">
             <button @click="deleteSelected">Delete</button>
             <button @click="setSelectedComplete">Set complete</button>
-            <button @click="setSelectedActive">Set Active</button>
+            <button @click="setSelectedActive">Set active</button>
         </div>
         <div class="list" v-if="itemList.length != 0">
-            <Item v-for="item in itemList" :item="item" @set-item="(item) => $emit('setItem', item)"  @set-active-form="(form) => $emit('setActiveForm', form)" />
+            <Item 
+                v-for="item in itemList" 
+                :key="item._id"
+                :item="item" 
+                @set-item="(item) => $emit('setItem', item)"  
+                @set-active-form="(form) => $emit('setActiveForm', form)" 
+                @set-current-item="(item) => $emit('setCurrentItem', item)"
+            />
         </div>
         <div class="empty-list" v-if="itemList.length == 0">
             <span>No items found</span>
