@@ -2,7 +2,7 @@
 
 Classic TODO app - save and manage your tasks.
 
-![](https://i.ibb.co/BKGMB3BR/todo.png)
+![](https://i.ibb.co/zHZtXq95/todo.png)
 
 ## Features
 
