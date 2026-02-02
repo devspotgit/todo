@@ -14,20 +14,6 @@ import cookieParser from "cookie-parser"
 
 import bcrypt from "bcrypt"
 
-import dotenv from "dotenv"
-
-dotenv.config()
-
-try{
-
-    await mongoose.connect(process.env.URI)
-
-    console.log("db connected")
-}
-catch(error){
-
-    console.log(error)
-}
 
 const serverRouter = express.Router()
 

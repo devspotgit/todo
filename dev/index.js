@@ -1,6 +1,4 @@
 
-import layout from "../src/layout.js"
-
 import esbuild from "esbuild"
 
 import vue from "esbuild-plugin-vue3"
@@ -10,6 +8,8 @@ import express from "express"
 import path from "path"
 
 import { fileURLToPath } from "url"
+
+import mongoose from "mongoose"
 
 import serverRouter from "../src/server_router.js"
 
@@ -24,6 +24,18 @@ const app = express()
 
 
 dotenv.config()
+
+
+try{
+
+    await mongoose.connect(process.env.URI)
+
+    console.log("db connected")
+}
+catch(error){
+
+    console.log(error)
+}
 
 
 app.use( async (req, res, next) => {

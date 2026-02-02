@@ -62,14 +62,6 @@ var item_default = Item;
 // src/server_router.js
 import cookieParser from "cookie-parser";
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
-dotenv.config();
-try {
-  await mongoose3.connect(process.env.URI);
-  console.log("db connected");
-} catch (error) {
-  console.log(error);
-}
 var serverRouter = express.Router();
 serverRouter.use(express.json());
 serverRouter.use(cookieParser());
@@ -251,11 +243,16 @@ serverRouter.post("/api/set-complete", async (req, res) => {
 var server_router_default = serverRouter;
 
 // build/index.js
-import dotenv2 from "dotenv";
+import mongoose4 from "mongoose";
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
 var app = express2();
-dotenv2.config();
+try {
+  await mongoose4.connect(process.env.URI);
+  console.log("db connected");
+} catch (error) {
+  console.log(error);
+}
 app.use(express2.static(path.join(__dirname, "..", "dist", "public")));
 app.use("/", server_router_default);
 app.listen(process.env.PORT, () => console.log("server listening on port " + process.env.PORT));
